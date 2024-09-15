@@ -24,8 +24,10 @@ sp_oauth = SpotifyOAuth(
     show_dialog = True
 )
 sp = Spotify(auth_manager=sp_oauth)
-info_list = []
+#info_list = []
 #artist_list = []
+#tempo should be obtained from terra.api
+tempo = 100
 track_list = []
 
 @app.route('/')
@@ -33,15 +35,15 @@ def home():
     if not sp_oauth.validate_token(cache_handler.get_cached_token()):
         auth_url = sp_oauth.get_authorize_url()
         return redirect(auth_url)
-    for i in info_list:
-        print(i)
-    return redirect(url_for('get_top_artists'))
+    #for i in info_list:
+        #print(i)
+    return redirect(url_for('get_top_tracks'))
 
 @app.route('/callback')
 def callback():
     sp_oauth.get_access_token(request.args['code'])
-    for i in info_list:
-        print(i)
+    #for i in info_list:
+        #print(i)
     return redirect(url_for('get_top_tracks'))
 
 #@app.route('/get_top_artists')
@@ -59,7 +61,7 @@ def callback():
         #print((artist[1].split('artist/', 1))[1])
         #artist_list.append(artist[1])
     #print(artist_list)
-    ##return redirect(url_for('get_top_tracks'))
+    #return redirect(url_for('get_top_tracks'))
 
 @app.route('/get_top_tracks')
 def get_top_tracks():
@@ -71,7 +73,7 @@ def get_top_tracks():
     top_tracks_info = [(ta['name'], ta['external_urls']['spotify']) for ta in top_tracks['items']]
     top_tracks_html = '<br>'.join([f'{name}: {url}' for name, url in top_tracks_info])
     #print(top_tracks_info)
-    info_list.append(top_tracks_info)
+    #info_list.append(top_tracks_info)
     for track in top_tracks_info:
         #print((track[1].split('track/', 1))[1])
         track_list.append(track[1])
@@ -83,7 +85,7 @@ def recommendations():
         auth_url = sp_oauth.get_authorize_url()
         return redirect(auth_url)
     
-    recommended = sp.recommendations(seed_tracks=track_list, country='US', limit=1, target_tempo=100)
+    recommended = sp.recommendations(seed_tracks=track_list, country='US', limit=1, min_tempo=tempo-10, max_tempo=tempo+10)
     print(recommended["tracks"][0]["external_urls"]["spotify"])
     return "Everything is fine"
 
