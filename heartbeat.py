@@ -26,6 +26,49 @@ class HeartRateMonitor:
     
 hr_monitor = HeartRateMonitor()
 
+# Define tempo ranges for focus and workout modes
+FOCUS_MIN_TEMPO = 60
+FOCUS_MAX_TEMPO = 100
+
+WORKOUT_MIN_TEMPO = 100
+WORKOUT_MAX_TEMPO = 160
+
+def calculate_tempo(heart_rate, mode="focus"):
+    if mode == "focus":
+        if heart_rate < 65:
+            # Increase tempo for lower heart rate
+            tempo = FOCUS_MAX_TEMPO - ((65 - heart_rate) * 0.5)
+        elif heart_rate > 85:
+            # Decrease tempo for higher heart rate
+            tempo = FOCUS_MIN_TEMPO + ((heart_rate - 85) * 0.5)
+        else:
+            # Keep tempo moderate if within the target range
+            tempo = (FOCUS_MIN_TEMPO + FOCUS_MAX_TEMPO) / 2
+
+    elif mode == "workout":
+        if heart_rate < 100:
+            # Increase tempo to push heart rate up
+            tempo = WORKOUT_MAX_TEMPO - ((100 - heart_rate) * 0.7)
+        else:
+            # Keep tempo high if heart rate is already high
+            tempo = WORKOUT_MIN_TEMPO
+
+    return max(FOCUS_MIN_TEMPO, min(tempo, WORKOUT_MAX_TEMPO))  # Ensure tempo is within bounds
+
+# Function to pass the tempo to the Spotify API and get song recommendations
+def get_spotify_recommendations(tempo):
+    url = "http://127.0.0.1:8001/recommendations"  # Assuming the Spotify API is running on this port
+    params = {'tempo': tempo}  # Pass the calculated tempo to Spotify API
+    response = requests.get(url, params=params)
+
+    if response.status_code == 200:
+        # Extract the Spotify track URL from the response
+        track_url = response.json().get("track_url")
+        logging.info(f"Recommended Track: {track_url}")
+        return track_url
+    else:
+        logging.error(f"Error fetching recommendation: {response.status_code}")
+        return None
 
 # Enhanced logging setup
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -127,9 +170,20 @@ async def stream_terra():
                             'type': message['t']
                         }
                         #logging.info(f"Parsed heart rate data: {heart_rate_data}")
-                        socketio.emit('heart_rate_update', heart_rate_data)
+                        #socketio.emit('heart_rate_update', heart_rate_data)
+
                         filtered_hr = hr_monitor.filter_heart_rate(message['d']['val'])
-                        print("Filtered Heart Rate:", filtered_hr)
+                        logging.info(f"Filtered Heart Rate: {filtered_hr}")
+
+                        tempo = calculate_tempo(filtered_hr, "focus")
+                        logging.info(f"Calculated Tempo: {tempo}")
+
+                        # Get recommended track based on the tempo
+                        track_url = get_spotify_recommendations(tempo)
+
+                        # Emit the filtered heart rate and recommended track to frontend
+                        socketio.emit('heart_rate_update', {'heart_rate': filtered_hr, 'track_url': track_url})
+                        
                     else:
                         logging.warning(f"Unknown message type: {message}")
 
