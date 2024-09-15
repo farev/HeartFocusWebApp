@@ -51,12 +51,20 @@
         #focus {
             color: white;
             background-color: darkblue;
-            border: lightblue 2px solid;
         }
         #workout {
             color: white;
             background-color: maroon;
-            border: lightsalmon 2px solid;
+        }
+        #pause:hover, #play:hover {
+            box-shadow: 5px 5px 5px black;
+            cursor: pointer;
+        }
+        #focus:hover, #workout:hover {
+            cursor: pointer;
+        }
+        #focus:focus, #workout:focus {
+            border: darkgreen 10px solid;
         }
     </style>
 </head>
