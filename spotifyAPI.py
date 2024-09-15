@@ -99,6 +99,15 @@ def play():
     play_song = sp.start_playback(uris=['https://open.spotify.com/track/4xdBrk0nFZaP54vvZj0yx7?si=18431c46423c4882'])
     return redirect(url_for('get_top_tracks'))
 
+@app.route('/current')
+def current():
+    if not sp_oauth.validate_token(cache_handler.get_cached_token()):
+        auth_url = sp_oauth.get_authorize_url()
+        return redirect(auth_url)
+    current_display = sp.currently_playing()
+    current_display_html = (f"Now Playing: {current_display['item']['name']} by {current_display['item']['artists'][0]['name']}")
+    return current_display_html
+
 @app.route('/queue')
 def queue():
     if not sp_oauth.validate_token(cache_handler.get_cached_token()):
@@ -107,14 +116,10 @@ def queue():
     
     next_track = session.get('next_track')
     #print((next_track.split('track/', 1)))
-    print('1')
     next_track_id = (next_track.split('track/', 1))[1]
-    print('2')
     queue_add = sp.add_to_queue(next_track_id, device_id=None)
-    return 'hi'
+    return redirect(url_for('current'))
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8000, debug=True)
-    
-
     
