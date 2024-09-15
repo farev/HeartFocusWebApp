@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Rate Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Heart Rate Data</h1>
+
+    <h2>Summary</h2>
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td>Average Heart Rate (bpm)</td>
+            <td>{{ data.avg_hr_bpm or 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td>Max Heart Rate (bpm)</td>
+            <td>{{ data.max_hr_bpm or 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td>Min Heart Rate (bpm)</td>
+            <td>{{ data.min_hr_bpm or 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td>Resting Heart Rate (bpm)</td>
+            <td>{{ data.resting_hr_bpm or 'N/A' }}</td>
+        </tr>
+    </table>
+
+    <h2>Heart Rate Samples</h2>
+    <table>
+        <tr>
+            <th>Timestamp</th>
+            <th>BPM</th>
+        </tr>
+        {% for sample in data.hr_samples %}
+        <tr>
+            <td>{{ sample.timestamp }}</td>
+            <td>{{ sample.bpm }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>
