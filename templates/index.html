@@ -25,6 +25,10 @@
             font-size: 24px;
             margin: 20px 0;
         }
+        #timestamp {
+            font-size: 14px;
+            color: #666;
+        }
         canvas {
             margin-top: 20px;
         }
@@ -34,6 +38,7 @@
     <div class="container">
         <h1>Live Heart Rate</h1>
         <div id="heart-rate">Waiting for data...</div>
+        <div id="timestamp"></div>
         <canvas id="heartRateChart"></canvas>
     </div>
 
@@ -77,24 +82,23 @@
         });
 
         socket.on('heart_rate_update', function(data) {
-            console.log('Received live heart rate data:', data);
-            if (data && data.heart_rate) {
-                document.getElementById('heart-rate').innerText = "Current Heart Rate: " + data.heart_rate + " BPM";
-                
-                // Update chart
-                chart.data.labels.push(new Date().toLocaleTimeString());
-                chart.data.datasets[0].data.push(data.heart_rate);
-                
-                // Keep only the last 20 data points
-                if (chart.data.labels.length > 20) {
-                    chart.data.labels.shift();
-                    chart.data.datasets[0].data.shift();
-                }
-                
-                chart.update();
-            } else {
-                console.warn('Received invalid heart rate data:', data);
+            console.log('Received heart rate update:', data);
+            // Update the UI with the new heart rate data
+            document.getElementById('heart-rate').textContent = `Heart Rate: ${data.value} bpm`;
+            document.getElementById('timestamp').textContent = `Last updated: ${new Date(data.timestamp).toLocaleString()}`;
+            
+            // Update the chart
+            const timestamp = new Date(data.timestamp);
+            chart.data.labels.push(timestamp.toLocaleTimeString());
+            chart.data.datasets[0].data.push(data.value);
+            
+            // Keep only the last 20 data points
+            if (chart.data.labels.length > 20) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
             }
+            
+            chart.update();
         });
 
         // Log any errors

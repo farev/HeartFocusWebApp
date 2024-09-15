@@ -38,7 +38,6 @@ def get_token():
         logging.error(f"Error fetching token: {e}")
         return None
 
-# Background task to stream heart rate data from Terra and send it to the frontend
 async def stream_terra():
     logging.info("stream_terra function started")
     while True:
@@ -66,24 +65,49 @@ async def stream_terra():
                 await websocket.send(auth_message)
                 logging.info("Sent authentication message to Terra API")
                 
+                heartbeat_interval = None
+                last_sequence = None
+                ready = False
+
                 async def send_heartbeat():
                     while True:
-                        await websocket.send(json.dumps({"op": 1}))
-                        await asyncio.sleep(interval / 1000)
+                        await asyncio.sleep(heartbeat_interval / 1000)
+                        heartbeat = {"op": 1, "d": last_sequence}
+                        await websocket.send(json.dumps(heartbeat))
+                        logging.info("Sent heartbeat")
 
-                # Continuously listen for incoming data
+                heartbeat_task = None
+
                 while True:
                     data = await websocket.recv()
                     logging.info(f"Received data from Terra API: {data}")
                     message = json.loads(data)
 
                     if message.get('op') == 2:  # Hello message
-                        interval = message['d']['heartbeat_interval']
-                        asyncio.create_task(send_heartbeat())
-                    elif message.get('op') == 1:  # Heartbeat ACK
+                        heartbeat_interval = message['d']['heartbeat_interval']
+                        logging.info(f"Received Hello message. Heartbeat interval: {heartbeat_interval}ms")
+                    elif message.get('op') == 4:  # Ready message
+                        ready = True
+                        logging.info("Received Ready message. Connection is now ready for data.")
+                        if heartbeat_task is None and heartbeat_interval is not None:
+                            heartbeat_task = asyncio.create_task(send_heartbeat())
+                    elif message.get('op') == 1:  # Heartbeat request
+                        heartbeat = {"op": 1, "d": last_sequence}
+                        await websocket.send(json.dumps(heartbeat))
+                        logging.info("Sent heartbeat in response to request")
+                    elif message.get('op') == 11:  # Heartbeat ACK
                         logging.info("Received heartbeat acknowledgment")
-                    elif message.get('op') == 0:  # Actual data
-                        heart_rate_data = message.get('d', {})
+                    elif message.get('op') == 5:  # Heart rate data
+                        if not ready:
+                            logging.warning("Received data before Ready message")
+                            continue
+                        last_sequence = message.get('seq')
+                        heart_rate_data = {
+                            'value': message['d']['val'],
+                            'timestamp': message['d']['ts'],
+                            'user_id': message['uid'],
+                            'type': message['t']
+                        }
                         logging.info(f"Parsed heart rate data: {heart_rate_data}")
                         socketio.emit('heart_rate_update', heart_rate_data)
                     else:
@@ -95,6 +119,9 @@ async def stream_terra():
             logging.error(f"Failed to parse JSON data: {str(e)}")
         except Exception as e:
             logging.error(f"An unexpected error occurred: {str(e)}")
+        finally:
+            if heartbeat_task:
+                heartbeat_task.cancel()
         
         logging.info("Attempting to reconnect in 5 seconds...")
         await asyncio.sleep(5)  # Wait for 5 seconds before attempting to reconnect
@@ -103,7 +130,8 @@ async def stream_terra():
 @socketio.on('connect')
 def handle_connect():
     logging.info("Client connected")
-    socketio.start_background_task(stream_terra)
+    #socketio.start_background_task(stream_terra)
+    asyncio.run(stream_terra())
     logging.info("Started stream_terra background task")
 
 @socketio.on('disconnect')
