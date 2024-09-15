@@ -24,7 +24,10 @@ def consume_terra_webhook() -> flask.Response:
 
     if verified:
         # Extract heart rate data
-        heart_rate_data = body.get("data")[0]["heart_rate_data"]
+        if body.get("data"):
+            heart_rate_data = body.get("data")[0]["heart_rate_data"]
+        else:
+            heart_rate_data = None
         #print(heart_rate_data)
 
         if heart_rate_data:
