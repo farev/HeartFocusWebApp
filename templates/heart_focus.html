@@ -27,9 +27,52 @@
         th {
             background-color: #f2f2f2;
         }
+        #allBtns {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+        }
+        #pause, #play {
+            height: 10rem;
+            width: 10rem;
+            border-radius: 50%;
+        }
+        #focus, #workout {
+            font-weight: bold;
+            font-size: 20px;
+            height: 10rem;
+            width: 25rem;
+            border-radius: 0%;
+        }
+        #pauseplay {
+            display: flex;
+            gap: 2rem;
+        }
+        #focus {
+            color: white;
+            background-color: darkblue;
+            border: lightblue 2px solid;
+        }
+        #workout {
+            color: white;
+            background-color: maroon;
+            border: lightsalmon 2px solid;
+        }
     </style>
 </head>
 <body>
+    <div id="allBtns">
+        <div id="focus">
+            <button id="focus">FOCUS</button>
+        </div>
+        <div id="pauseplay">
+            <button id="pause">||</button>
+            <button id="play">></button>
+        </div>
+        <div id="workout">
+            <button id="workout">WORKOUT</button>
+        </div>
+    </div>
     <h1>Heart Rate Data</h1>
 
     <h2>Summary</h2>
@@ -69,6 +112,5 @@
         </tr>
         {% endfor %}
     </table>
-
 </body>
 </html>
