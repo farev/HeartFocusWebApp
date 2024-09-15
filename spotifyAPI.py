@@ -12,7 +12,7 @@ app.config['SECRET_KEY'] = os.urandom(64)
 client_id = 'd196ffdec4734d30a407cc6946381981'
 client_secret = '6cc086bb56db461dba5829eb20fe83b7'
 redirect_uri = 'http://localhost:8000/callback'
-scope = 'user-top-read'
+scope = 'user-top-read user-modify-playback-state user-read-playback-state'
 
 cache_handler = FlaskSessionCacheHandler(session)
 sp_oauth = SpotifyOAuth(
@@ -44,7 +44,7 @@ def callback():
     sp_oauth.get_access_token(request.args['code'])
     #for i in info_list:
         #print(i)
-    return redirect(url_for('get_top_tracks'))
+    return redirect(url_for('play'))
 
 #@app.route('/get_top_artists')
 #def get_top_artists():
@@ -85,11 +85,36 @@ def recommendations():
         auth_url = sp_oauth.get_authorize_url()
         return redirect(auth_url)
     
+    next_track = []
     recommended = sp.recommendations(seed_tracks=track_list, country='US', limit=1, min_tempo=tempo-10, max_tempo=tempo+10)
     print(recommended["tracks"][0]["external_urls"]["spotify"])
-    return "Everything is fine"
+    session['next_track'] = recommended["tracks"][0]["external_urls"]["spotify"]
+    return redirect(url_for('queue'))
+
+@app.route('/play')
+def play():
+    if not sp_oauth.validate_token(cache_handler.get_cached_token()):
+        auth_url = sp_oauth.get_authorize_url()
+        return redirect(auth_url)
+    play_song = sp.start_playback(uris=['https://open.spotify.com/track/4xdBrk0nFZaP54vvZj0yx7?si=18431c46423c4882'])
+    return redirect(url_for('get_top_tracks'))
+
+@app.route('/queue')
+def queue():
+    if not sp_oauth.validate_token(cache_handler.get_cached_token()):
+        auth_url = sp_oauth.get_authorize_url()
+        return redirect(auth_url)
+    
+    next_track = session.get('next_track')
+    #print((next_track.split('track/', 1)))
+    print('1')
+    next_track_id = (next_track.split('track/', 1))[1]
+    print('2')
+    queue_add = sp.add_to_queue(next_track_id, device_id=None)
+    return 'hi'
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8000, debug=True)
+    
 
     
