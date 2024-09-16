@@ -44,10 +44,8 @@
 
     <script>
         console.log("Script started");
-        var socket = io({
-            transports: ['websocket'],
-            upgrade: false
-        });
+        const socket = io('http://localhost:8080');
+
         console.log("Socket.io initialized with WebSocket transport");
 
         var ctx = document.getElementById('heartRateChart').getContext('2d');

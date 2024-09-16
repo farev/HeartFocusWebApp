@@ -35,13 +35,17 @@
 </head>
 <body>
     <h1>Live Heart Rate</h1>
-    <div class="heart-rate" id="heartRate">-- BPM</div>
+    <div class="heart-rate" id="heartRate">85 BPM</div>
     
-    <div class="track-link" id="trackLink">No track recommended yet</div>
+    <div class="track-link" id="trackLink">HOT TO GO! by Chappell Roan</div>
 
     <script>
         // Connect to the SocketIO server
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        //var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var socket = io({
+            transports: ['websocket'],
+            upgrade: false
+        });
 
         // Listen for the 'heart_rate_update' event
         socket.on('heart_rate_update', function(data) {

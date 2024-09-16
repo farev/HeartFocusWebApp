@@ -57,7 +57,7 @@ def calculate_tempo(heart_rate, mode="focus"):
 
 # Function to pass the tempo to the Spotify API and get song recommendations
 def get_spotify_recommendations(tempo):
-    url = "http://127.0.0.1:8001/recommendations"  # Assuming the Spotify API is running on this port
+    url = "http://127.0.0.1:8000/recommendations"  # Assuming the Spotify API is running on this port
     params = {'tempo': tempo}  # Pass the calculated tempo to Spotify API
     response = requests.get(url, params=params)
 
@@ -179,10 +179,10 @@ async def stream_terra():
                         logging.info(f"Calculated Tempo: {tempo}")
 
                         # Get recommended track based on the tempo
-                        track_url = get_spotify_recommendations(tempo)
+                        #track_url = get_spotify_recommendations(tempo)
 
                         # Emit the filtered heart rate and recommended track to frontend
-                        socketio.emit('heart_rate_update', {'heart_rate': filtered_hr, 'track_url': track_url})
+                        socketio.emit('heart_rate_update', {'heart_rate': filtered_hr, 'track_url': "sample url"})
                         
                     else:
                         logging.warning(f"Unknown message type: {message}")
@@ -214,9 +214,9 @@ def handle_disconnect():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('sample.html')
 
 # Run the Flask app with SocketIO support
 if __name__ == "__main__":
     logging.info("Starting Flask-SocketIO server...")
-    socketio.run(app, host="0.0.0.0", port=8080, debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app, host="localhost", port=8080, debug=True, allow_unsafe_werkzeug=True)
